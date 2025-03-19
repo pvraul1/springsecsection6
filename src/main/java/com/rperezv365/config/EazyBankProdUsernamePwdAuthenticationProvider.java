@@ -1,6 +1,5 @@
 package com.rperezv365.config;
 
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -21,9 +20,9 @@ import org.springframework.stereotype.Component;
  * @since jdk 1.21
  */
 @Component
-@Profile("!prod")
+@Profile("prod")
 @RequiredArgsConstructor
-public class EazyBankUsernamePwdAuthenticationProvider implements AuthenticationProvider {
+public class EazyBankProdUsernamePwdAuthenticationProvider implements AuthenticationProvider {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
@@ -34,8 +33,12 @@ public class EazyBankUsernamePwdAuthenticationProvider implements Authentication
         String pwd = authentication.getCredentials().toString();
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-        return new UsernamePasswordAuthenticationToken(userDetails, pwd, userDetails.getAuthorities());
+        if (passwordEncoder.matches(pwd, userDetails.getPassword())) {
+            // Fetch age details and perform validation to check if age > 18
+            return new UsernamePasswordAuthenticationToken(userDetails, pwd, userDetails.getAuthorities());
+        } else {
+            throw new BadCredentialsException("Invalid password!");
+        }
 
     }
 
